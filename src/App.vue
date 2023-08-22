@@ -1,26 +1,22 @@
+<!-- App.vue -->
 <template>
-  <img alt="Vue logo" src="./assets/logo.png">
-  <HelloWorld msg="Welcome to Your Vue.js App"/>
+    <div >
+    <NavigationMenu />
+    <div class="container" style="width:80%; background-color:rgb(247, 247, 230)">
+    <router-view /> <!-- This will render the appropriate component based on the route -->
+    </div>
+    <FooterMenu />
+  </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import NavigationMenu from "@/components/NavigationMenu.vue"; // Adjust the path as needed
+import FooterMenu from "@/components/FooterMenu.vue"; // Adjust the path as needed
 
 export default {
-  name: 'App',
   components: {
-    HelloWorld
-  }
-}
+    NavigationMenu, // Register the NavigationMenu component
+    FooterMenu, // Register the NavigationMenu component
+  },
+};
 </script>
-
-<style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
-</style>
