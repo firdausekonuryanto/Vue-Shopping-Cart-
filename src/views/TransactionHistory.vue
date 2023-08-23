@@ -1,6 +1,8 @@
 <template>
   <div class="container" style="margin-top:-20px; background-color:rgb(247, 247, 230)">
     <h2>Transaction History</h2>
+    <canvas ref="barChart"></canvas>
+
     <div class="row mb-3">
   <div class="col">
     <label for="start-date">Start Date:</label>
@@ -142,6 +144,7 @@
 
 <script>
 import axios from "axios";
+import Chart from 'chart.js/auto'; // Importing Chart.js with the "auto" build
 
 export default {
   data() {
@@ -159,6 +162,37 @@ export default {
   },
   
   methods: {
+    extractChartData() {
+    const dates_income = this.transactions.map(transaction => transaction.purchase_date);
+    const amount_income = this.transactions.map(transaction => parseFloat(transaction.total_amount));
+    return { dates_income, amount_income };
+  },
+
+  
+    renderBarChart() {
+      const { dates_income, amount_income } = this.extractChartData();
+    const ctx = this.$refs.barChart.getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: dates_income, // Replace with your labels
+        datasets: [{
+          label: 'Dataset Label',
+          data: amount_income, // Replace with your data values
+          backgroundColor: 'rgba(75, 192, 192, 0.2)',
+          borderColor: 'rgba(75, 192, 192, 1)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
+    });
+  },
     updateStartDate(event) {
       this.parsedStartDate = new Date(event.target.value);
     },
@@ -239,7 +273,7 @@ export default {
 
         const responseTransactions = await axios.get(apiUrl, { headers });
 
-        console.log(responseTransactions);
+        // console.log(responseTransactions);
         const filteredTransactions = responseTransactions.data
           .map(transaction => ({
             ...transaction,
@@ -247,8 +281,8 @@ export default {
           }));
 
         this.transactions = filteredTransactions;
-
-        console.log("Filtered Transactions:", this.transactions);
+        this.renderBarChart();
+        // console.log("Filtered Transactions:", this.transactions);
       } catch (error) {
         console.error("Error fetching transactions:", error);
       }
@@ -267,7 +301,7 @@ async fetchTransactionitems() {
     };
 
     const response = await axios.get("http://localhost:5000/transactionitems", { headers });
-    console.log("Transaction Items Response:", response.data);
+    // console.log("Transaction Items Response:", response.data);
 
     this.transactionitems = await Promise.all(response.data.map(async transactionItem => {
       try {
@@ -301,6 +335,7 @@ async fetchMembers() {
 
     const responseMembers = await axios.get("http://localhost:5000/members", { headers });
     this.members = responseMembers.data;
+    // this.renderBarChart();
     } catch (error) {
         console.error("Error fetching members:", error);
     }
@@ -321,15 +356,17 @@ formatDate(date) {
 },
     
 mounted() {
+  
   this.fetchMembers();
   this.fetchTransactions();
   this.fetchTransactionitems();
+  // this.renderBarChart();
 },
 
 created() {
   const userData = this.getUserDataFromLocalStorage();
   if (userData) {
-    console.log("Logged in as:", userData.username);
+    // console.log("Logged in as:", userData.username);
   }
 },
 
@@ -363,4 +400,7 @@ input[type="date"] {
 .modal-print{
   max-width: 40%;
 }
+canvas {
+    max-width: 100%;
+  }
 </style>

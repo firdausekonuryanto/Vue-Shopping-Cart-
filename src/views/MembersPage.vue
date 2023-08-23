@@ -1,13 +1,19 @@
 <template>
-  <div>
-    <h1>Members List</h1>
+<div ref="contentToPrint">
+    <h1>Members List</h1> 
     <span class="btn btn-success" @click="showModal = true">
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-earmark-plus-fill" viewBox="0 0 16 16">
         <path d="M9.293 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.707A1 1 0 0 0 13.707 4L10 .293A1 1 0 0 0 9.293 0zM9.5 3.5v-2l3 3h-2a1 1 0 0 1-1-1zM8.5 7v1.5H10a.5.5 0 0 1 0 1H8.5V11a.5.5 0 0 1-1 0V9.5H6a.5.5 0 0 1 0-1h1.5V7a.5.5 0 0 1 1 0z"/>
       </svg>
       Tambah Member
     </span>
-    <table ref="memberTable" style="width: 100%;" class="table table-striped" align="center">
+    <button class="btn btn-dark" @click="generatePDF" style="margin-left: 5px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-download" viewBox="0 0 16 16">
+        <path d="M8 12a.5.5 0 0 0 .5-.5V2a.5.5 0 0 0-1 0v9.5a.5.5 0 0 0 .5.5zM4.854 8.646a.5.5 0 0 0 .353.854H7v4.793a.5.5 0 0 0 1 0V9.5a.5.5 0 0 0-1 0v3.646H5.146a.5.5 0 0 0-.353.854l3 3a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8 12.293 5.854 10.146a.5.5 0 0 0-.708.708l3 3zM1 15.5A1.5 1.5 0 0 0 2.5 17h11a1.5 1.5 0 0 0 1.5-1.5V7a.5.5 0 0 0-1 0v8.5a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5V7a.5.5 0 0 0-1 0v8.5z"/>
+      </svg>
+      Download Member List to PDF
+    </button>
+        <table ref="memberTable" style="width: 100%;" class="table table-striped" align="center">
       <thead class="bg-dark text-light text-center" style="height:50px;">
         <tr>
           <th>No</th>
@@ -131,6 +137,8 @@ import axios from "axios";
 import "datatables.net-dt/css/jquery.dataTables.min.css";
 import $ from "jquery";
 import "datatables.net";
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 export default {
   data() {
@@ -166,6 +174,40 @@ export default {
   },
 
   methods: {
+    async generatePDF() {
+  const pdf = new jsPDF({
+    orientation: 'portrait', // or 'landscape'
+    unit: 'mm',
+    format: 'a4', // or an array of [width, height]
+    marginLeft: 25, // Left margin in mm
+    marginRight: 25, // Right margin in mm
+    marginTop: 30, // Top margin in mm
+    marginBottom: 30, // Bottom margin in mm
+  });
+
+  const contentToPrint = this.$refs.contentToPrint;
+
+  const canvas = await html2canvas(contentToPrint);
+  const imgData = canvas.toDataURL('image/png');
+
+  const imgWidth = pdf.internal.pageSize.getWidth() - 50; // Adjust for left and right margins
+  const imgHeight = (canvas.height * imgWidth) / canvas.width;
+  let remainingHeight = imgHeight;
+
+  let positionY = 30; // Top margin
+
+  pdf.addImage(imgData, 'PNG', 25, positionY, imgWidth, imgHeight);
+
+  while (remainingHeight > 0) {
+    positionY += pdf.internal.pageSize.getHeight();
+    pdf.addPage();
+    pdf.addImage(imgData, 'PNG', 25, positionY, imgWidth, imgHeight);
+    remainingHeight -= pdf.internal.pageSize.getHeight();
+  }
+
+  pdf.save('member-list.pdf');
+},
+
     getUserDataFromLocalStorage() {
       const userDataString = localStorage.getItem("userData");
       if (userDataString) {
